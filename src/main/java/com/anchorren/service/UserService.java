@@ -31,6 +31,10 @@ public class UserService {
 		return userDao.selectUserById(id);
 	}
 
+	public User selectUserByName(String name) {
+		return userDao.selectUserByName(name);
+	}
+
 	public Map<String, String> register(String username, String password) {
 		Map<String, String> map = new HashMap<String, String>();
 		if (StringUtils.isBlank(username)) {
@@ -101,6 +105,10 @@ public class UserService {
 
 		loginTicketDao.addTicket(loginTicket);
 		return loginTicket.getTicket();
+	}
+
+	public void logout(String ticket) {
+		loginTicketDao.updateStatus(ticket,1);
 	}
 
 }
