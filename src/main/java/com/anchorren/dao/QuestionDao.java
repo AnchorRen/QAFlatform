@@ -17,10 +17,17 @@ public interface QuestionDao {
 
 	@Insert({"insert into ",TABLE_NAME,"(",INSERT_FIELDS,") values (" +
 			"#{title},#{content},#{createdDate},#{userId},#{commentCount})"})
-	int addQuestion(Question questio);
+	int addQuestion(Question question);
 
 	List<Question> selectLatestQuestions(@Param("userId") int userId,
 										@Param("offset") int offset,
 										@Param("limit") int limit);
+
+	@Select({"select ", SELECT_FIELDS, " from ", TABLE_NAME, " where id = #{id}"})
+	Question getQuestionById(int id);
+
+
+	@Update({"update ",TABLE_NAME, " set comment_count = #{commentCount} where id = #{id}"})
+	int updateCommmentCount(@Param("id") int id,@Param("commentCount")int commentCount);
 
 }
