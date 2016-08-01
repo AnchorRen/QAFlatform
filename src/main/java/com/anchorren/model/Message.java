@@ -9,10 +9,11 @@ public class Message {
 
 	private int id;
 	private int fromId;
+	private int toId;
 	private String content;
-	private int conversion_id;
-	private Date create_date;
-
+	private String conversationId;
+	private Date createdDate;
+	private int hasRead;
 
 	public int getId() {
 		return id;
@@ -30,6 +31,14 @@ public class Message {
 		this.fromId = fromId;
 	}
 
+	public int getToId() {
+		return toId;
+	}
+
+	public void setToId(int toId) {
+		this.toId = toId;
+	}
+
 	public String getContent() {
 		return content;
 	}
@@ -38,30 +47,36 @@ public class Message {
 		this.content = content;
 	}
 
-	public int getConversion_id() {
-		return conversion_id;
+	/**
+	 * 生成ConcersationId的方法
+	 * @return
+	 */
+	public String getConversationId() {
+		if (fromId < toId) {
+			return String.format("%d_%d", fromId, toId);
+		}
+		return String.format("%d_%d", toId, fromId);
 	}
 
-	public void setConversion_id(int conversion_id) {
-		this.conversion_id = conversion_id;
+	public void setConversationId(String conversationId) {
+		this.conversationId = conversationId;
 	}
 
-	public Date getCreate_date() {
-		return create_date;
+	public Date getCreatedDate() {
+		return createdDate;
 	}
 
-	public void setCreate_date(Date create_date) {
-		this.create_date = create_date;
+	public void setCreatedDate(Date createdDate) {
+		this.createdDate = createdDate;
 	}
 
-	@Override
-	public String toString() {
-		return "Message{" +
-				"id=" + id +
-				", fromId=" + fromId +
-				", content='" + content + '\'' +
-				", conversion_id=" + conversion_id +
-				", create_date=" + create_date +
-				'}';
+	public int getHasRead() {
+		return hasRead;
 	}
+
+	public void setHasRead(int hasRead) {
+		this.hasRead = hasRead;
+	}
+
+
 }
