@@ -3,6 +3,7 @@ package com.anchorren.controller;
 import com.anchorren.dao.QuestionDao;
 import com.anchorren.model.*;
 import com.anchorren.service.CommentService;
+import com.anchorren.service.LikeService;
 import com.anchorren.service.QuestionService;
 import com.anchorren.service.UserService;
 import com.anchorren.utils.QAUtil;
@@ -37,6 +38,9 @@ public class QuestionController {
 
 	@Autowired
 	CommentService commentService;
+
+	@Autowired
+	LikeService likeService;
 
 
 	@RequestMapping(value = "/question/add", method = {RequestMethod.POST})
@@ -79,7 +83,13 @@ public class QuestionController {
 		for (Comment comment : commentList) {
 			ViewObject vo = new ViewObject();
 			vo.set("comment", comment);
+			vo.set("likeCount",likeService.getLikeCont(EntityType.ENTITY_COMMENT,comment.getId()));
 			vo.set("user", userService.getUser(comment.getUserId()));
+			if (hostHolder.getUser() == null) {
+				vo.set("liked",0);
+			}else{
+				vo.set("liked",likeService.getLikeStatus(hostHolder.getUser().getId(),EntityType.ENTITY_COMMENT,comment.getId()));
+			}
 			comments.add(vo);
 		}
 		model.addAttribute("comments", comments);
