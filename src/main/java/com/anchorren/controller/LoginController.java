@@ -1,5 +1,8 @@
 package com.anchorren.controller;
 
+import com.anchorren.async.EventModel;
+import com.anchorren.async.EventProducer;
+import com.anchorren.async.EventType;
 import com.anchorren.service.UserService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -28,6 +31,8 @@ public class LoginController {
 	@Autowired
 	UserService userService;
 
+	@Autowired
+	EventProducer eventProducer;
 
 	@RequestMapping(path = {"/reg/",}, method = {RequestMethod.POST})
 
@@ -87,6 +92,10 @@ public class LoginController {
 					cookie.setMaxAge(3600 * 24 * 7);
 				}
 				response.addCookie(cookie);
+
+				eventProducer.fireEvent(new EventModel(EventType.LOGIN)
+						.setExt("username", username).setExt("email", "1490920181@qq.com"));
+
 				if (StringUtils.isNotBlank(next)) {
 					return "redirect:" + next;
 				}
@@ -98,7 +107,10 @@ public class LoginController {
 
 			return "redirect:/";
 		} catch (Exception e) {
-			logger.error("注册异常！" + e.getMessage());
+			eventProducer.fireEvent(new EventModel(EventType.LOGIN)
+					.setExt("username", username).setExt("email", "543177205@qq.com")
+					.setActorId(Integer.parseInt(map.get("userId"))));
+			logger.error("登陆异常！" + e.getMessage());
 			return "login";
 		}
 	}

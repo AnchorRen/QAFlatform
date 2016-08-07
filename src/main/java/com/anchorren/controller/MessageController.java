@@ -67,7 +67,7 @@ public class MessageController {
 				}
 
 				vo.set("headUrl", user.getHeadUrl());
-				vo.set("userId", user.getId());
+				vo.set("user", user);
 				messages.add(vo);
 			}
 			model.addAttribute("messages", messages);
@@ -131,13 +131,16 @@ public class MessageController {
 	@RequestMapping(value = "/msg/list", method = {RequestMethod.GET})
 	public String getconversationList(Model model) {
 		try {
+			if (hostHolder.getUser() == null) {
+				return "redirect:/reglogin";
+			}
 			int localUser = hostHolder.getUser().getId();
 			List<ViewObject> conversations = new ArrayList<>();
 			List<Message> messages = messageService.getConversationList(localUser, 0, 10);
 			for (Message message : messages) {
 
 				ViewObject vo = new ViewObject();
-				vo.set("conversation", message);
+				vo.set("message", message);
 				int targetId = message.getFromId() == localUser ? message.getToId() : message.getFromId();
 				User user = userService.getUser(targetId);
 				vo.set("user", user);
@@ -145,6 +148,7 @@ public class MessageController {
 				conversations.add(vo);
 			}
 			model.addAttribute("conversations", conversations);
+			return "letter";
 		} catch (Exception e) {
 			logger.error("获取站内信列表失败！" + e.getMessage());
 		}
