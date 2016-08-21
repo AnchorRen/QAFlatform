@@ -2,10 +2,7 @@ package com.anchorren.controller;
 
 import com.anchorren.dao.QuestionDao;
 import com.anchorren.model.*;
-import com.anchorren.service.CommentService;
-import com.anchorren.service.LikeService;
-import com.anchorren.service.QuestionService;
-import com.anchorren.service.UserService;
+import com.anchorren.service.*;
 import com.anchorren.utils.QAUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.View;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,6 +39,9 @@ public class QuestionController {
 
 	@Autowired
 	LikeService likeService;
+
+	@Autowired
+	FollowService followService;
 
 
 	@RequestMapping(value = "/question/add", method = {RequestMethod.POST})
@@ -72,27 +73,46 @@ public class QuestionController {
 	public String getQuestionDetail(Model model, @PathVariable("qid") int qid) {
 
 		Question question = questionService.getQuestionById(qid);
-
-		User user = userService.getUser(question.getUserId());
-		model.addAttribute("user", user);
 		model.addAttribute("question", question);
 
-		//查找问题下的所有评论
 		List<Comment> commentList = commentService.getCommentsByEntity(qid, EntityType.ENTITY_QUESTION);
-		List<ViewObject> comments = new ArrayList<>();
+		List<ViewObject> comments = new ArrayList<ViewObject>();
 		for (Comment comment : commentList) {
 			ViewObject vo = new ViewObject();
 			vo.set("comment", comment);
-			vo.set("likeCount",likeService.getLikeCont(EntityType.ENTITY_COMMENT,comment.getId()));
-			vo.set("user", userService.getUser(comment.getUserId()));
 			if (hostHolder.getUser() == null) {
-				vo.set("liked",0);
-			}else{
-				vo.set("liked",likeService.getLikeStatus(hostHolder.getUser().getId(),EntityType.ENTITY_COMMENT,comment.getId()));
+				vo.set("liked", 0);
+			} else {
+				vo.set("liked", likeService.getLikeStatus(hostHolder.getUser().getId(), EntityType.ENTITY_COMMENT, comment.getId()));
 			}
+
+			vo.set("likeCount", likeService.getLikeCont(EntityType.ENTITY_COMMENT, comment.getId()));
+			vo.set("user", userService.getUser(comment.getUserId()));
 			comments.add(vo);
 		}
+
 		model.addAttribute("comments", comments);
+
+		List<ViewObject> followUsers = new ArrayList<ViewObject>();
+		// 获取关注的用户信息
+		List<Integer> users = followService.getFollowers(EntityType.ENTITY_QUESTION, qid, 20);
+		for (Integer userId : users) {
+			ViewObject vo = new ViewObject();
+			User u = userService.getUser(userId);
+			if (u == null) {
+				continue;
+			}
+			vo.set("name", u.getName());
+			vo.set("headUrl", u.getHeadUrl());
+			vo.set("id", u.getId());
+			followUsers.add(vo);
+		}
+		model.addAttribute("followUsers", followUsers);
+		if (hostHolder.getUser() != null) {
+			model.addAttribute("followed", followService.isFollower(hostHolder.getUser().getId(), EntityType.ENTITY_QUESTION, qid));
+		} else {
+			model.addAttribute("followed", false);
+		}
 
 		return "detail";
 	}

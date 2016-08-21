@@ -1,7 +1,8 @@
 package com.anchorren.controller;
 
-import com.anchorren.model.Question;
-import com.anchorren.model.ViewObject;
+import com.anchorren.model.*;
+import com.anchorren.service.CommentService;
+import com.anchorren.service.FollowService;
 import com.anchorren.service.QuestionService;
 import com.anchorren.service.UserService;
 import org.omg.CORBA.Request;
@@ -28,11 +29,33 @@ public class HomeController {
 	@Autowired
 	QuestionService questionService;
 
+	@Autowired
+	FollowService followService;
+
+	@Autowired
+	CommentService commentService;
+
+	@Autowired
+	HostHolder hostHolder;
+
 	@RequestMapping(path = "/user/{userId}", method = {RequestMethod.GET})
 	public String showUserIndex(Model model, @PathVariable("userId") int userId) {
 		List<ViewObject> vos = getLatestQuestions(userId, 0, 10);
 		model.addAttribute("vos", vos);
-		return "index";
+
+		User user = userService.getUser(userId);
+		ViewObject vo = new ViewObject();
+		vo.set("user", user);
+		vo.set("commentCount", commentService.getUserCommentCount(userId));
+		vo.set("followerCount", followService.getFollowerCount(userId, EntityType.ENTITY_USER));
+		vo.set("followeeCount", followService.getFolloweeCount(EntityType.ENTITY_USER, userId));
+		if (hostHolder.getUser() != null) {
+			vo.set("followed", followService.isFollower(hostHolder.getUser().getId(), EntityType.ENTITY_USER, userId));
+		}else{
+			vo.set("followed", false);
+		}
+		model.addAttribute("profileUser", vo);
+		return "profile";
 	}
 
 
@@ -50,6 +73,7 @@ public class HomeController {
 		for (Question question : questions) {
 			ViewObject viewObject = new ViewObject();
 			viewObject.set("question", question);
+			viewObject.set("followCount", followService.getFollowerCount(EntityType.ENTITY_QUESTION, question.getId()));
 			viewObject.set("user", userService.getUser(question.getUserId()));
 			vos.add(viewObject);
 		}

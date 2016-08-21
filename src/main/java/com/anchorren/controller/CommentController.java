@@ -1,5 +1,8 @@
 package com.anchorren.controller;
 
+import com.anchorren.async.EventModel;
+import com.anchorren.async.EventProducer;
+import com.anchorren.async.EventType;
 import com.anchorren.dao.QuestionDao;
 import com.anchorren.model.Comment;
 import com.anchorren.model.EntityType;
@@ -35,6 +38,9 @@ public class CommentController {
 	@Autowired
 	QuestionService questionService;
 
+	@Autowired
+	private EventProducer eventProducer;
+
 	@RequestMapping(value = "/addComment",method = {RequestMethod.POST})
 	public String addComment(@RequestParam("questionId") int questionId,
 							 @RequestParam("content") String content){
@@ -57,6 +63,8 @@ public class CommentController {
 			int commentCount = commentService.getCommentCount(questionId, EntityType.ENTITY_QUESTION);
 			questionService.updateCommentCount(questionId,commentCount);
 
+			eventProducer.fireEvent(new EventModel(EventType.COMMENT).setActorId(comment.getUserId())
+									.setEntityId(questionId));
 
 		} catch (Exception e) {
 			logger.error("添加评论失败！" + e.getMessage());
